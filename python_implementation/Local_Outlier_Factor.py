@@ -1,5 +1,6 @@
 """
      Group 18 Local Outlier Factor
+     https://github.com/harisek36/LOF-Anonomly-Detect
 """
 import numpy as np
 import time
