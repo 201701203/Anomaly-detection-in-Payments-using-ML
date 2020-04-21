@@ -4,6 +4,7 @@ import pandas as pd
 import random as rn
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import axes3d
+from sklearn.model_selection import train_test_split
 
 # import model
 import Isolation_Forest as iso
@@ -20,6 +21,9 @@ y=data.iloc[1:,30]       # target class
 x = x-np.mean(x)
 x = x/np.std(x)
 
+# split the data for training 
+x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.1)
+
 #--------Plot the data-----------------
 
 
@@ -29,8 +33,8 @@ S=F.compute_paths(X_in=x)
 
 
 #--------------------------------2---Local outlier Factor------------------------------#
-
-
+outliers = lof.lof(X=x, k=10, outlier_threshold = 1.75)
+lof.data_visualization(X=x, X_outliers=outliers)
 
 #--------------------------------3---Logistic Regression-------------------------------#
 model = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
