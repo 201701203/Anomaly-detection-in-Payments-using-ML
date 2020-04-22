@@ -1,10 +1,8 @@
 """
      Group 18 Logistic Regression with Gradient descent
-     https://github.com/martinpella/logistic-reg
 """
 # import necessary libraries
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Logistic Regression
 class LogisticRegression:

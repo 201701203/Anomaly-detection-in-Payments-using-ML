@@ -33,13 +33,12 @@ S=F.compute_paths(X_in=x)
 
 
 #--------------------------------2---Local outlier Factor------------------------------#
-outliers = lof.lof(X=x, k=10, outlier_threshold = 1.75)
-lof.data_visualization(X=x, X_outliers=outliers)
+outliers = lof.LocalOutlierFactor(X=x, k=10)
 
 #--------------------------------3---Logistic Regression-------------------------------#
 model = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
 model.fit(x, y)
-preds = model.predict(X)
+preds = model.predict(x)
 model.theta
 
 
