@@ -33,13 +33,13 @@ S=F.compute_paths(X_in=x)
 
 
 #--------------------------------2---Local outlier Factor------------------------------#
-outliers = lof.LocalOutlierFactor(X=x, k=10)
+y_lof = lof.LocalOutlierFactor(X=x, k=10)
+lof_accuracy = (y_lof == y_test).mean()
 
 #--------------------------------3---Logistic Regression-------------------------------#
 model = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
-model.fit(x, y)
-preds = model.predict(x)
-model.theta
-
+model.fit(x_train, y_train)
+preds = model.predict(x_test)
+log_reg_accuracy = (preds == y_test).mean()
 
 #--------------------------------4---Support vector machine----------------------------#

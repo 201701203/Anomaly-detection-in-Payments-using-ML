@@ -10,7 +10,6 @@ def LocalOutlierFactor(X, k, outlier_threshold = 1.2):
     # X = dataset, leaf_size = Number of points at which to switch to brute-force. , p = 2 means a euclidean distance metric
     BT = KDTree(X, leaf_size=k, p=2)
 
-    # 
     distance, index = BT.query(X, k)
     distance, index = distance[:, 1:], index[:, 1:] 
     radius = distance[:, -1]
@@ -23,10 +22,14 @@ def LocalOutlierFactor(X, k, outlier_threshold = 1.2):
     outlier_score = np.sum(r[index], axis=1) / np.array(r, dtype=np.float16)
     outlier_score *= 1. / k
 
-    outliers = []
+    # target class
+    y = []
 
+    # check whether given instance in outlier or not based on their outlier_score and outlier_threshold
     for i, score in enumerate(outlier_score):
         if score > outlier_threshold:
-            outliers.append([X[i], score])
+            y.append(1)
+        else :
+            y.append(0)
 
-    return outliers
+    return y
