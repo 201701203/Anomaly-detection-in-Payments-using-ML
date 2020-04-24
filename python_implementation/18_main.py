@@ -37,9 +37,13 @@ y_lof = lof.LocalOutlierFactor(X=x, k=10)
 lof_accuracy = (y_lof == y_test).mean()
 
 #--------------------------------3---Logistic Regression-------------------------------#
-model = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
-model.fit(x_train, y_train)
-preds = model.predict(x_test)
-log_reg_accuracy = (preds == y_test).mean()
+model_lr = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
+model_lr.fit(x_train, y_train)
+pred_lr = model_lr.predict(x_test)
+lr_accuracy = (pred_lr == y_test).mean()
 
 #--------------------------------4---Support vector machine----------------------------#
+model_svm = svm.SupportVectorMachine()
+model_svm.fit(X=x_train, y=y_train)
+pred_svm = model_svm.predict(X=x_test)
+svm_accuracy = (pred_svm == y_test).mean()
