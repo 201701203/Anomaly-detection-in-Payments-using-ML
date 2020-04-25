@@ -1,84 +1,113 @@
 """
      Group 18 Support Vector Machine
 """
+
+from __future__ import division, print_function
+import os
 import numpy as np
+import random as rnd
+from sklearn.metrics.pairwise import rbf_kernel
+filepath = os.path.dirname(os.path.abspath(__file__))
 
- # RBF kernel
-def GaussianKernel(v1, v2, sigma):
-    return np.exp(-np.subtract(v1-v2, 2)**2/(2.*sigma**2))
+class SVM():
+    
+    #Simple implementation of a Support Vector Machine using the Sequential Minimal Optimization (SMO) algorithm for training.
 
-class SupportVectorMachine:
-    def __init__(self, C = 1, sigma=1, epochs=0):
+    def __init__(self, max_iter=10000, C=1.0, epsilon=0.001):
+        self.max_iter = max_iter
         self.C = C
-        self.sigma = sigma
-        self.epochs = epochs
-
-    # Sequential minimal optimization
-    def __smo(self, X, y, kernel):
-        n_samples = X.shape[0]
-
-        alpha = np.zeros(n_samples)
-        self.__bias = 0
-        e = -y
-
-        for _ in range(self.epochs):
-            for i in range(n_samples):
-                hi = kernel[i].dot(alpha * y) + self.__bias
-                if (y[i] * hi < 1 and alpha[i] < self.C) or (y[i] * hi > 1 and alpha[i] > 0):
-                    j = np.argmax(np.abs(e - e[i]))
-
-                    if y[i] == y[j]:
-                        L = max(0, alpha[i] + alpha[j] - self.C)
-                        H = min(self.C, alpha[i] + alpha[j])
-                    else:
-                        L = max(0, alpha[j] - alpha[i])
-                        H = min(self.C, self.C + alpha[j] - alpha[i])
-                    if L == H:
-                        continue
-
-                    eta = kernel[i, i] + kernel[j, j] - 2 * kernel[i, j]
-                    if eta <= 0:
-                        continue
-
-                    alpha_j = alpha[j] + y[j] * (e[i] - e[j]) / eta
-
-                    if alpha_j > H:
-                        alpha_j = H
-                    elif alpha_j < L:
-                        alpha_j = L
-
-                    alpha_i = alpha[i] + y[i] * y[j] * (alpha[j] - alpha_j)
-
-                    bi = self.__bias - e[i] - y[i] * kernel[i, i] * (alpha_i - alpha[i]) - y[j] * kernel[i, j] * (alpha_j - alpha[j])
-                    bj = self.__bias - e[j] - y[i] * kernel[i, j] * (alpha_i - alpha[i]) - y[j] * kernel[j, j] * (alpha_j - alpha[j])
-
-                    if 0 < alpha_i and alpha_i < self.C:
-                        self.__bias = bi
-                    elif 0 < alpha_j and alpha_j < self.C:
-                        self.__bias = bj
-                    else:
-                        self.__bias = (bi + bj) / 2
-
-                    alpha[i] = alpha_i
-                    alpha[j] = alpha_j
-
-                    e[i] = kernel[i].dot(alpha * y) + self.__bias - y[i]
-                    e[j] = kernel[j].dot(alpha * y) + self.__bias - y[j]
-                
-        support_items = np.flatnonzero(alpha > 1e-6)
-        self.__X_support = X[support_items]
-        self.__y_support = y[support_items]
-        self.__a_support = alpha[support_items]
+        self.epsilon = epsilon
 
     def fit(self, X, y):
-        kernel = GaussianKernel(X, X, self.sigma)
-        self.__smo(X, y, kernel)
+        # Initialization
+        n, d = X.shape[0], X.shape[1]
+        alpha = np.zeros((n))
+        count = 0
+        while True:
+            count += 1
+            alpha_prev = np.copy(alpha)
+            for j in range(0, n):
+                i = self.get_rnd_int(0, n-1, j) # Get random int i~=j
+                x_i = X.values[i,:]
+                x_j = X.values[j,:]
+                y_i = y.values[i]
+                y_j = y.values[j]
+
+                x_i = x_i.reshape(1, -1)  # only one sample
+                x_j = x_j.reshape(1, -1)
+
+                k_ij = rbf_kernel(x_i, x_i) + rbf_kernel(x_j, x_j) - 2 * rbf_kernel(x_i, x_j)
+                if k_ij == 0:
+                    continue
+                alpha_prime_j, alpha_prime_i = alpha[j], alpha[i]
+                (L, H) = self.compute_L_H(self.C, alpha_prime_j, alpha_prime_i, y_j, y_i)
+
+                # Compute model parameters
+                self.w = self.calc_w(alpha, y, X)
+                self.b = self.calc_b(X, y, self.w)
+
+                # Compute E_i, E_j
+                E_i = self.E(x_i, y_i, self.w, self.b)
+                E_j = self.E(x_j, y_j, self.w, self.b)
+
+                # Set new alpha values
+                alpha[j] = alpha_prime_j + float(y_j * (E_i - E_j))/k_ij
+                alpha[j] = max(alpha[j], L)
+                alpha[j] = min(alpha[j], H)
+
+                alpha[i] = alpha_prime_i + y_i*y_j * (alpha_prime_j - alpha[j])
+
+            # Check convergence
+            diff = np.linalg.norm(alpha - alpha_prev)
+            if diff < self.epsilon:
+                break
+
+            if count >= self.max_iter:
+                print("Iteration number exceeded the max of %d iterations" % (self.max_iter))
+                return
+        # Compute final model parameters
+        self.b = self.calc_b(X, y, self.w)
+        # Get support vectors
+        alpha_idx = np.where(alpha > 0)[0]
+        support_vectors = X.values[alpha_idx, :]
+        return support_vectors, count
 
 
     def predict(self, X):
-        return np.sign(self.score(X))
+        return self.h(X, self.w, self.b)
 
 
-    def score(self, X):
-        kernel = GaussianKernel(X, self.__X_support, self.sigma)
-        return (self.__a_support * self.__y_support).dot(kernel) + self.__bias
+    def calc_b(self, X, y, w):
+        b_tmp = y - np.dot(w.T, X.T)
+        return np.mean(b_tmp)
+
+
+    def calc_w(self, alpha, y, X):
+        return np.dot(X.T, np.multiply(alpha,y))
+
+
+    # Prediction
+    def h(self, X, w, b):
+        return np.sign(np.dot(w.T, X.T) + b).astype(int)
+
+
+    # Prediction error
+    def E(self, x_k, y_k, w, b):
+        return self.h(x_k, w, b) - y_k
+
+
+    def compute_L_H(self, C, alpha_prime_j, alpha_prime_i, y_j, y_i):
+        if(y_i != y_j):
+            return (max(0, alpha_prime_j - alpha_prime_i), min(C, C - alpha_prime_i + alpha_prime_j))
+        else:
+            return (max(0, alpha_prime_i + alpha_prime_j - C), min(C, alpha_prime_i + alpha_prime_j))
+
+
+    def get_rnd_int(self, a,b,z):
+        i = z
+        cnt=0
+        while i == z and cnt<1000:
+            i = rnd.randint(a,b)
+            cnt=cnt+1
+        return i
+

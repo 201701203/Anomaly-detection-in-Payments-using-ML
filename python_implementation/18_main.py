@@ -43,6 +43,9 @@ pred_lr = model_lr.predict(x_test)
 lr_accuracy = (pred_lr == y_test).mean()
 
 #--------------------------------4---Support vector machine----------------------------#
+for x in y_train:
+    if x == 0:
+        x = -1
 model_svm = svm.SupportVectorMachine()
 model_svm.fit(X=x_train, y=y_train)
 pred_svm = model_svm.predict(X=x_test)
