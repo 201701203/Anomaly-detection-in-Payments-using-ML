@@ -21,7 +21,7 @@ class iForest(object):
         self.c = c_factor(self.sample)        
         for _ in range(self.ntrees):
             ix = rn.sample(range(self.nobjs), self.sample)      # give random numbers from 1 to n
-            X_p = X[ix]
+            X_p = X.values[ix,:]
             self.Trees.append(iTree(X_p, 0, self.limit))
 
     def compute_paths(self, X_in = None):
@@ -31,7 +31,7 @@ class iForest(object):
         for i in  range(len(X_in)):
             h_temp = 0
             for j in range(self.ntrees):
-                h_temp += PathFactor(X_in[i],self.Trees[j]).path*1.0
+                h_temp += PathFactor(self.X.values[i,:],self.Trees[j]).path*1.0
             Eh = h_temp/self.ntrees
             S[i] = 2.0**(-Eh/self.c)
         return S
