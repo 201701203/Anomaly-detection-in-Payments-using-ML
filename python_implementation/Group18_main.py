@@ -28,25 +28,26 @@ x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.1)
 
 
 #--------------------------------1---Isolation Forest----------------------------------#
-F = iso.iForest(X=x,ntrees=500, sample_size=256)    #Create Forest
-S=F.compute_paths(X_in=x)
-
+F = iso.iForest(X=x,ntrees=50, sample_size=25)
+y_iso=F.predict(X_in=x)
+iso_accuracy = (y_svm == y).mean()
+iso_accuracy
 
 #--------------------------------2---Local outlier Factor------------------------------#
-y_lof = lof.LocalOutlierFactor(X=x, k=10)
-lof_accuracy = (y_lof == y_test).mean()
+y_lof = lof.LocalOutlierFactor(X=x, k=10, outlier_threshold = 4)
+lof_accuracy = (y_lof == y).mean()
+lof_accuracy
 
 #--------------------------------3---Logistic Regression-------------------------------#
-model_lr = log_reg.LogisticRegression(lr=0.1, num_iter=120000) # Learning rate = 0.1 and Number of Iteration 120000
-model_lr.fit(x_train, y_train)
-pred_lr = model_lr.predict(x_test)
-lr_accuracy = (pred_lr == y_test).mean()
+model = log_reg.LogisticRegression(lr=0.01, num_iter=1000)
+model.fit(x_train, y_train)
+preds = model.predict(x_test)
+log_reg_accuracy = (preds == y_test).mean()
+log_reg_accuracy
 
 #--------------------------------4---Support vector machine----------------------------#
-for x in y_train:
-    if x == 0:
-        x = -1
-model_svm = svm.SupportVectorMachine()
-model_svm.fit(X=x_train, y=y_train)
-pred_svm = model_svm.predict(X=x_test)
-svm_accuracy = (pred_svm == y_test).mean()
+model_svm = svm.SVM()
+model_svm.fit(X = x_train, y=y_train)
+y_svm = model_svm.predict(x_test)
+svm_accuracy = (y_svm == y_test).mean()
+svm_accuracy
