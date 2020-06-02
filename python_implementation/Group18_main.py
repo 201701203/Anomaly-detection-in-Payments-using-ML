@@ -30,7 +30,7 @@ x_train,x_test,y_train,y_test = train_test_split(x,y,test_size=0.1)
 #--------------------------------1---Isolation Forest----------------------------------#
 F = iso.iForest(X=x,ntrees=50, sample_size=25)
 y_iso=F.predict(X_in=x)
-iso_accuracy = (y_svm == y).mean()
+iso_accuracy = (y_iso == y).mean()
 iso_accuracy
 
 #--------------------------------2---Local outlier Factor------------------------------#

@@ -1,13 +1,9 @@
 """
      Group 18 Support Vector Machine
 """
-
-from __future__ import division, print_function
-import os
 import numpy as np
 import random as rnd
 from sklearn.metrics.pairwise import rbf_kernel
-filepath = os.path.dirname(os.path.abspath(__file__))
 
 class SVM():
     
